@@ -1,0 +1,45 @@
+<launch>
+	<!-- Launch file created and tested on 100125 Nat -->
+	<!-- Arguments -->
+	<arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
+	<arg name="configuration_basename" default="turtlebot3_lds_2d.lua"/>
+	<arg name="sensor_range" default="1.0"/>
+	<arg name="cmd_vel_topic" default="/tb3_1/cmd_vel" />
+	<arg name="odom_topic" default="odom" />
+	<arg name="initial_pose_x" default="7.0"/>
+	<arg name="initial_pose_y" default="-1.0"/>
+	<arg name="initial_pose_a" default="1.57"/>
+	<arg name="base_footprint" default="tb3_1/base_footprint"/>
+
+	
+	<!-- move base -->
+	<node pkg="move_base" type="move_base" name="move_base" respawn="true" ns="tb3_1" output="screen" >
+		<param name="base_local_planner" value="dwa_local_planner/DWAPlannerROS" />
+		<rosparam file="$(find turtlebot3_navigation)/param/costmap_common_params_$(arg model).yaml" command="load" ns="global_costmap" />
+		<rosparam file="$(find turtlebot3_navigation)/param/costmap_common_params_$(arg model).yaml" command="load" ns="local_costmap" />
+		<rosparam file="/home/natalie/catkin_ws/src/turtlebot3_simulations/Nturtlebot3_nav/param/local_costmap_params_tb3_1.yaml" command="load" />
+		<rosparam file="/home/natalie/catkin_ws/src/turtlebot3_simulations/Nturtlebot3_nav/param/global_costmap_params_tb3_1.yaml" command="load" />
+		<rosparam file="$(find turtlebot3_navigation)/param/move_base_params.yaml" command="load" />
+		<rosparam file="$(find turtlebot3_navigation)/param/dwa_local_planner_params_$(arg model).yaml" command="load" />
+		<remap from="cmd_vel" to="$(arg cmd_vel_topic)"/>
+		<remap from="odom" to="$(arg odom_topic)"/>
+	</node>
+
+    <!-- Frontier exploration -->
+	<node pkg="explore_lite" type="explore" respawn="false" name="explore" ns="tb3_1" output="screen">
+		<param name="robot_base_frame" value="/tb3_1/base_link"/>
+		<param name="costmap_topic" value="map"/>
+		<param name="costmap_updates_topic" value="map_updates"/>
+		<param name="visualize" value="true"/>
+		<param name="planner_frequency" value="0.33"/>
+		<param name="progress_timeout" value="30.0"/>
+		<param name="potential_scale" value="3.0"/>
+		<param name="orientation_scale" value="0.0"/>
+		<param name="gain_scale" value="1.0"/>
+		<param name="transform_tolerance" value="0.3"/>
+		<param name="min_frontier_size" value="0.75"/>
+	</node>
+
+</launch>
+
+

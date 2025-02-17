@@ -1,0 +1,7 @@
+<launch>
+
+	<!-- RViz -->
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find turtlebot3_gazebo)/rviz/multi_turtlebot3_slam.rviz"/>
+
+
+</launch>

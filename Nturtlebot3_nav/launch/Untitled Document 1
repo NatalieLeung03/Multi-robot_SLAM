@@ -1,0 +1,31 @@
+<!-- frontier exploration -->
+	<include file="/opt/ros/melodic/share/explore_lite/launch/explore.launch" />
+
+<!-- move base -->
+<node pkg="move_base" type="move_base" name="move_base" respawn="true" output="screen" >
+	<arg name="initial_pose_x" default="-3.0"/>
+	<arg name="initial_pose_y" default="1.0"/>
+	<arg name="initial_pose_a" default="0.0"/>
+	<param name="base_local_planner" value="dwa_local_planner/DWAPlannerROS" />
+	<rosparam file="$(find turtlebot3_navigation)/param/costmap_common_params_$(arg model).yaml" command="load" ns="global_costmap" />
+	<rosparam file="$(find turtlebot3_navigation)/param/costmap_common_params_$(arg model).yaml" command="load" ns="local_costmap" />
+	<rosparam file="$(find turtlebot3_navigation)/param/local_costmap_params.yaml" command="load" />
+	<rosparam file="$(find turtlebot3_navigation)/param/global_costmap_params.yaml" command="load" />
+	<rosparam file="$(find turtlebot3_navigation)/param/move_base_params.yaml" command="load" />
+	<rosparam file="$(find turtlebot3_navigation)/param/dwa_local_planner_params_$(arg model).yaml" command="load" />
+	<remap from="cmd_vel" to="$(arg cmd_vel_topic)"/>
+	<remap from="odom" to="$(arg odom_topic)"/>
+</node>
+
+<!-- Frontier exploration -->
+<group>
+	<include file="$(find explore_lite)/launch/explore.launch" />
+</group>
+
+<group>
+
+		<include file="$(find turtlebot3_slam)/launch/turtlebot3_slam.launch">
+            <arg name="slam_methods" value="gmapping" />
+			<arg name="ns" value="tb3_1" />
+        </include>
+    </group>

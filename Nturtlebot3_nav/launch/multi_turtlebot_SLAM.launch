@@ -1,0 +1,86 @@
+<launch>
+	<!-- Launch file created and tested on 100125 Nat -->
+	<!-- Arguments -->
+	<arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
+	<arg name="configuration_basename" default="turtlebot3_lds_2d.lua"/>
+	<arg name="sensor_range" default="1.0"/>
+	<arg name="cmd_vel_topic" default="/cmd_vel" />
+	<arg name="odom_topic" default="odom" />
+	
+    <arg name="use_gazebo" default="true" />
+	<arg name="use_frontier" default="true"/>
+
+	<!-- TurtleBot3 -->
+	<include file="$(find turtlebot3_bringup)/launch/turtlebot3_remote.launch">
+		<arg name="model" value="$(arg model)" />
+	</include>
+	
+	<!-- Gazebo -->
+	<group if="$(arg use_gazebo)">
+        <include file="$(find turtlebot3_gazebo)/launch/multi_turtlebot3.launch">
+            <arg name="model" value="$(arg model)"/>
+			<arg name="first_tb3" value="tb3_0"/>
+			<arg name="second_tb3" value="tb3_1"/>
+
+            <arg name="first_tb3_x_pos" value="-7.0"/>
+			<arg name="first_tb3_y_pos" value="-1.0"/>
+			<arg name="first_tb3_z_pos" value=" 0.0"/>
+			<arg name="first_tb3_yaw"   value=" 1.57"/>
+
+			<arg name="second_tb3_x_pos" value=" 0.5"/>
+			<arg name="second_tb3_y_pos" value=" 3.0"/>
+			<arg name="second_tb3_z_pos" value=" 0.0"/>
+			<arg name="second_tb3_yaw"   value=" 1.57"/>
+
+			<param name="~srr" value="0.1" />  <!-- Odometry error in translation as a function of translation (rho/rho)  -->
+            <param name="~stt" value="0.1" />  <!-- Odometry error in translation as a function of rotation (rho/theta) -->
+            <param name="~str" value="0.1" />  <!-- Odometry error in rotation as a function of translation (theta/rho) -->
+            <param name="~stt" value="0.1" />  <!-- Odometry error in rotation as a function of rotation (theta/theta) -->
+            <param name = "~sigma" value="0.1" /> <!-- Believe Noise in laser sensor -->
+            <param name = "~maxrange" value="50.0" />
+            <param name = "~maxUrange" value="50.0" /> <!-- Maximum range of the sensor -->
+            <param name = "~minimumScore" value="0.0" /> <!-- Minimum score for considering a reading as a valid hit -->
+        </include>
+    </group>
+	
+	<node pkg="Nturtlebot3_nav" type="odom_noise_old.py" name="odom_newnoise" output="screen"/>
+    
+    <!-- Launching first turtlebot SLAM gmapping -->
+    <node pkg= "gmapping" type = "slam_gmapping" name="turtlebot3_slam_gmapping" ns="tb3_0" output = "screen">
+		<param name="base_frame" value="tb3_0/base_footprint"/>
+		<param name="odom_frame" value="tb3_0/odom"/>
+		<param name="map_frame"  value="tb3_0/map"/>
+		<rosparam command="load" file="$(find turtlebot3_slam)/config/gmapping_params.yaml" />
+	</node>
+    
+    <!-- Launching second turtlebot SLAM gmapping -->
+    <node pkg= "gmapping" type = "slam_gmapping" name="turtlebot3_slam_gmapping" ns="tb3_1" output = "screen">
+		<param name="base_frame" value="tb3_1/base_footprint"/>
+		<param name="odom_frame" value="tb3_1/odom"/>
+		<param name="map_frame"  value="tb3_1/map"/>
+		<rosparam command="load" file="$(find turtlebot3_slam)/config/gmapping_params.yaml" />
+	</node>
+    
+	<!-- Map merge -->
+	<group>
+		<include file="$(find turtlebot3_gazebo)/launch/multi_map_merge.launch">
+			<arg name="first_tb3" value="tb3_0"/>
+			<arg name="second_tb3" value="tb3_1"/>
+			<param name="known_init_poses" value="false"/>
+		</include>
+	</group>
+
+	<!-- RViz -->
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find turtlebot3_gazebo)/rviz/multi_turtlebot3_slam.rviz"/>
+
+	<!-- Frontier exploration and Move base for first turtlebot-->
+	<group if="$(arg use_frontier)">
+		<include file="/home/natalie/catkin_ws/src/turtlebot3_simulations/Nturtlebot3_nav/launch/explore_tb3_0.launch" />
+	</group>
+
+	<!-- Frontier exploration and Move base for second turtlebot-->
+	<group if="$(arg use_frontier)">
+		<include file="/home/natalie/catkin_ws/src/turtlebot3_simulations/Nturtlebot3_nav/launch/explore_tb3_1.launch" />
+	</group>
+
+</launch>
