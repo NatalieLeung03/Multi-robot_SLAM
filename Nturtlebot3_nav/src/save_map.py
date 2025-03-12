@@ -6,10 +6,10 @@ import numpy as np
 from PIL import Image
 from decimal import *
 
-global map_data, width, height, map_img_data
+global robot_namespace
 
-def callback(data):
-    global map_img_data 
+def callback(data, robot_namespace):
+    date='1103'
     map_data = data.data
     width = data.info.width
     height = data.info.height
@@ -17,7 +17,8 @@ def callback(data):
     rospy.loginfo("Received a %s x %s map", width, height)
     
     # Get the file path from the ROS parameter server
-    save_path = rospy.get_param('~save_path', '/home/natalie/maps/greyscale_image.png')
+    save_path = rospy.get_param('save_path', '/home/natalie/maps/Real_world/Multi/3/')
+
     #rospy.loginfo(f"Map will be saved at: {save_path}")
     getcontext().prec = 3
     # convert to ranging from 0 to 255
@@ -37,17 +38,31 @@ def callback(data):
     
     # Convert the array to a grayscale image and save it
     map_img = Image.fromarray(map_img_data.astype(np.uint8))
+    now = rospy.get_rostime()
+    save_path = save_path + date + str(now.secs) + robot_namespace + '.png'
     map_img.save(save_path)
     rospy.loginfo("Map saved to %s", save_path)
-      
+    rospy.sleep(10.)
 
 def save_map():
-    rospy.init_node('save_map', anonymous=True)
-    rospy.Subscriber("/map", OccupancyGrid, callback)
+    multi_robot = rospy.get_param('multi_robot', 'true')
+
+    if multi_robot == 'true':
+        robot_namespace ='_main'
+        rospy.Subscriber("/map", OccupancyGrid, callback, callback_args=robot_namespace)
+        robot_namespace = '_tb3_0'
+        rospy.Subscriber("/tb3_0/map", OccupancyGrid, callback, callback_args=robot_namespace)
+        robot_namespace = '_tb3_1'
+        rospy.Subscriber("/tb3_1/map", OccupancyGrid, callback, callback_args=robot_namespace)
+    else:
+        robot_namespace='_single'
+        rospy.Subscriber("/map", OccupancyGrid, callback, callback_args=robot_namespace)
+        
+    #rospy.sleep(10.)
     rospy.loginfo("Waiting for the map...")
     rospy.spin()
 
-
 if __name__ == '__main__':
-    save_map()
+    rospy.init_node('save_map')
+    save_map()      
     
