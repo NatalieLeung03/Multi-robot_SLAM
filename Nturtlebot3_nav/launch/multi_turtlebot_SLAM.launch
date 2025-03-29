@@ -5,10 +5,10 @@
 	<arg name="configuration_basename" default="turtlebot3_lds_2d.lua"/>
 	<arg name="odom_topic" default="odom" />
 	<!-- arg to switch between sim and phy -->
-    <arg name="use_gazebo" default="false" />
+    <arg name="use_gazebo" default="true" />
 	<arg name="use_frontier" default="true"/>
 	<arg name="known_init_poses" default="false"/>
-	<!-- set robot position (sim) >
+	<!-- set robot position (tbhouse) >
 	<arg name="first_tb3_x_pos" value=" -0.5"/>
 	<arg name="first_tb3_y_pos" value=" 1.0"/>	
 	<arg name="second_tb3_x_pos" value=" 3.0"/>
@@ -18,9 +18,16 @@
 	<arg name="first_tb3_y_pos" value="-1.5"/>	
 	<arg name="second_tb3_x_pos" value=" 1.0"/>
 	<arg name="second_tb3_y_pos" value=" 1.0"/>
+	<!-- set robot position (real) >
+	<arg name="first_tb3_x_pos" value="-1.2"/>
+	<arg name="first_tb3_y_pos" value="-1.5"/>
+	<arg name="second_tb3_x_pos" value=" 0.0"/>
+	<arg name="second_tb3_y_pos" value=" 0.0"/-->
 	<!-- set robot name -->
 	<arg name="first_tb3" default="tb3_0"/>
 	<arg name="second_tb3" default="tb3_1"/>
+	<arg name="open_rviz" default="false"/>
+	<arg name="save_path" default="na" />
 	
 	<!-- Gazebo (default turtlebot3_house) (oldrif now)
 	For both robots, robot_description and robot_state_publisher and spawn_urdf-->
@@ -45,7 +52,7 @@
 		<param name="odom_frame" value="tb3_0/odom"/>
 		<param name="map_frame"  value="tb3_0/map"/>
 		<remap from="base_scan" to="tb3_0/scan"/>
-		<!--param name="maxUrange" value="1.5"/-->
+		<arg name="maxUrange" value="1.5"/>
 		<rosparam command="load" file="$(find turtlebot3_slam)/config/gmapping_params.yaml" />
 	</node>
     
@@ -55,9 +62,8 @@
 		<param name="base_frame" value="tb3_1/base_footprint"/>
 		<param name="odom_frame" value="tb3_1/odom"/>
 		<param name="map_frame"  value="tb3_1/map"/>
-		<!--remap from="scan" to="tb3_1/scan"/-->
 		<remap from="base_scan" to="tb3_1/scan"/>
-		<!--param name="maxUrange" value="1.5"/-->
+		<arg name="maxUrange" value="1.5"/>
 		<rosparam command="load" file="$(find turtlebot3_slam)/config/gmapping_params.yaml" />
 	</node>
     
@@ -73,13 +79,11 @@
 	</include>
 	
 	<!-- RViz -->
-    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find turtlebot3_gazebo)/rviz/multi_turtlebot3_slam.rviz">
-		<arg name="first_tb3_x_pos" value= "$(arg first_tb3_x_pos)"/>
-		<arg name="first_tb3_y_pos" value= "$(arg first_tb3_y_pos)"/>
-		<arg name="second_tb3_x_pos" value= "$(arg second_tb3_x_pos)"/>
-		<arg name="second_tb3_y_pos" value= "$(arg second_tb3_y_pos)"/>
-	</node>
-	  <!-- Open move_base for each robot in their ns -->
+	<group if="$(arg open_rviz)">
+		<node name="rviz" pkg="rviz" type="rviz" args="-d $(find turtlebot3_gazebo)/rviz/multi_turtlebot3_slam.rviz"/>
+	</group>
+
+	<!-- Open move_base for each robot in their ns -->
 	<group if="$(arg use_frontier)">
 		<!-- Frontier exploration and Move base for first turtlebot-->
 		<include file="/home/natalie/catkin_ws/src/turtlebot3_simulations/Nturtlebot3_nav/launch/explore_tb3_0.launch">						
@@ -93,5 +97,8 @@
 		</include>
 	</group>
 
-	<node name="save_map" pkg="Nturtlebot3_nav" type="save_map.py" output="screen" />
+	<!-- save map -->
+	<node name="save_map" pkg="Nturtlebot3_nav" type="save_map1303.py" respawn="true" output="screen" >
+		<param name="save_path" value="$(arg save_path)"/>
+    </node>
 </launch>

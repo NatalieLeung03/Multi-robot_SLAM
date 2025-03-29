@@ -5,11 +5,13 @@
 	<arg name="configuration_basename" default="turtlebot3_lds_2d.lua"/>
 	<arg name="cmd_vel_topic" default="/cmd_vel" />
 	<arg name="odom_topic" default="odom" />
-	<arg name="initial_pose_x" default="-1.2"/>
-	<arg name="initial_pose_y" default="-1.5"/>
+	<arg name="initial_pose_x" default="-1.0"/>
+	<arg name="initial_pose_y" default="-1.0"/>
 	<arg name="initial_pose_a" default="0.0"/>
-    <arg name="use_gazebo" default="true " />
+    <arg name="use_gazebo" default="true" />
 	<arg name="use_frontier_exploration" default="true" />
+	<arg name="open_rviz" default="false"/>
+	<arg name="save_path" default="na" />
 
 	<!-- Gazebo -->
 	<group if="$(arg use_gazebo)">
@@ -25,7 +27,8 @@
     <group>
         <include file="$(find turtlebot3_slam)/launch/turtlebot3_slam.launch">
             <arg name="slam_methods" value="gmapping" />
-			<arg name="maxUrange" value="1.2"/>
+			<arg name="maxUrange" value="1.5"/>
+			<arg name="open_rviz" value="$(arg open_rviz)"/>
         </include>
     </group>
 
@@ -46,5 +49,9 @@
     	<!-- Frontier exploration -->
         <include file="$(find explore_lite)/launch/explore.launch" />
     </group>
-    
+
+	<!-- save map -->
+	<node name="save_map" pkg="Nturtlebot3_nav" type="save_map1303.py" respawn="true" output="screen" >
+		<param name="save_path" value="$(arg save_path)"/>
+    </node>
 </launch>
